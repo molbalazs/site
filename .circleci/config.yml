@@ -23,8 +23,8 @@ jobs:
 workflows:
   deploy:
     jobs:
-      - deployS3
-        filters:
-          branches:
-            only:
-              - main
+      - deployS3:
+          filters:
+            branches:
+              only:
+                - main
