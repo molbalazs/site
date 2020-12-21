@@ -23,8 +23,7 @@ workflows:
   deploy:
     jobs:
       - deployS3:
-          context:
-            - aws
+          context: aws
           filters:
             branches:
               only:
