@@ -5,7 +5,7 @@ orbs:
 jobs:
   deployS3:
     docker:
-      - image: 'circleci/node:latest'
+      - image: 'circleci/python:latest'
 
     steps:
       - checkout
@@ -23,6 +23,8 @@ workflows:
   deploy:
     jobs:
       - deployS3:
+          context:
+            - aws
           filters:
             branches:
               only:
