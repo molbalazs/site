@@ -10,7 +10,7 @@ jobs:
     steps:
       - checkout
       - aws-s3/sync:
-          from: ./public
+          from: ./build
           to: 's3://zsalab.com'
           arguments: |
             --acl public-read \
