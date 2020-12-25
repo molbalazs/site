@@ -5,8 +5,7 @@ orbs:
 executors:
   python:
     docker:
-      - image: circleci/python:latest
-
+      - image: circleci/python:2-node
 
 jobs:
   build:
@@ -38,6 +37,10 @@ jobs:
 workflows:
   deploy:
     jobs:
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-{{ checksum "yarn.lock" }}
       - build
       - test:
           requires:
@@ -49,3 +52,8 @@ workflows:
           filters:
             branches:
               only: main
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: yarn-packages-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
