@@ -38,6 +38,8 @@ jobs:
   test:
     executor: python
     steps:
+      - checkout
+      - *restore-cache
       - run: yarn test
 
   deployS3:
