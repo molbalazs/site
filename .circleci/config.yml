@@ -19,6 +19,7 @@ defaults:
       key: yarn-packages-{{ checksum "yarn.lock" }}
       paths:
         - ~/.cache/yarn
+        - ~/node_modules
 
 
 jobs:
