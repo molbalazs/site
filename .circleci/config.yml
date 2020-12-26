@@ -12,14 +12,13 @@ defaults:
     restore_cache:
       name: Restore Yarn Package Cache
       keys:
-        - yarn-packages-{{ checksum "yarn.lock" }}
+        - yarn-cache-{{ checksum "yarn.lock" }}
   - &save-cache
     save_cache:
       name: Save Yarn Package Cache
-      key: yarn-packages-{{ checksum "yarn.lock" }}
+      key: yarn-cache-{{ checksum "yarn.lock" }}
       paths:
         - /home/circleci/project/node_modules
-
 
 jobs:
   build:
