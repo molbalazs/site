@@ -46,6 +46,7 @@ jobs:
     executor: python
     steps:
       - checkout
+      - *restore-cache
       - aws-s3/sync:
           from: ./build
           to: 's3://zsalab.com'
