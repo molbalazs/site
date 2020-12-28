@@ -12,11 +12,11 @@ defaults:
     restore_cache:
       name: Restore Yarn Package Cache
       keys:
-        - cache-{{ checksum "yarn.lock" }}
+        - cache-2-{{ checksum "yarn.lock" }}
   - &save-cache
     save_cache:
       name: Save Yarn Package Cache
-      key: cache-{{ checksum "yarn.lock" }}
+      key: cache-2-{{ checksum "yarn.lock" }}
       paths:
         - /node_modules
         - /build
