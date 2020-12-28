@@ -18,18 +18,8 @@ defaults:
       name: Save Yarn Package Cache
       key: cache-{{ checksum "yarn.lock" }}
       paths:
-        - /home/circleci/project/node_modules
-  - &restore-app-build
-    restore_cache:
-      name: Restore build folder from cache
-      keys:
-        - cache-{{ .Branch }}
-  - &save-app-build
-    save_cache:
-      name: Save build folder into cache
-      key: cache-{{ .Branch }}
-      paths:
-        - /home/circleci/project/packages/app/build
+        - /node_modules
+        - /build
 
 jobs:
   build:
@@ -38,7 +28,6 @@ jobs:
     steps:
       - checkout
       - *restore-cache
-      - *restore-app-build
       - run:
           command: yarn
           name: Install dependencies
@@ -46,7 +35,6 @@ jobs:
           command: yarn build
           name: Compile
       - *save-cache
-      - *save-app-build
 
   test:
     working_directory: /home/circleci/project/packages/app
@@ -54,7 +42,6 @@ jobs:
     steps:
       - checkout
       - *restore-cache
-      - *restore-app-build
       - run: yarn test
 
   deployS3:
@@ -63,7 +50,6 @@ jobs:
     steps:
       - checkout
       - *restore-cache
-      - *restore-app-build
       - aws-s3/sync:
           from: ./packages/app/build
           to: "s3://zsalab.com"
