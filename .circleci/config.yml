@@ -2,6 +2,20 @@ version: 2.1
 orbs:
   aws-s3: circleci/aws-s3@2.0.0
 
+parameters:
+  # This parameter is used to trigger the main workflow
+  trigger:
+    type: boolean
+    default: true
+
+  # A parameter per package
+  api:
+    type: boolean
+    default: false
+  app:
+    type: boolean
+    default: false
+
 executors:
   python:
     docker:
@@ -13,19 +27,45 @@ defaults:
       name: Restore Yarn Package Cache
       keys:
         - cache-{{ checksum "yarn.lock" }}
+      working_directory: ~/project/packages/<< parameters.package_name >>
   - &save-cache
     save_cache:
       name: Save Yarn Package Cache
       key: cache-{{ checksum "yarn.lock" }}
+      working_directory: ~/project/packages/<< parameters.package_name >>
       paths:
-        - /home/circleci/project/node_modules
-        - /home/circleci/project/build
+        - ./node_modules
+        - ./build
 
 jobs:
-  build:
-    executor: python
+
+  trigger-workflows:
+    docker: 
+      - image: cimg/base:stable
     steps:
       - checkout
+      - run:
+          # This step is added to demonstrate the possibility to dynamically set the user token 
+          name: Set token
+          command: echo "export CIRCLE_USER_TOKEN=${CIRCLE_TOKEN}" >> $BASH_ENV
+      - run:
+          name: Trigger workflows
+          command: chmod +x .circleci/monorepo.sh && .circleci/monorepo.sh
+          environment:
+            # (optional) print additional debug information
+            MONOREPO_DEBUG: "true"
+            # (optional) additional CI parameters to include in the pipeline (must be a valid JSON)
+            CI_PARAMETERS: '{ "deploy": true }'
+
+  build:
+    parameters:
+      package_name:
+        type: string
+    executor: python
+    working_directory: ~/project/packages/<< parameters.package_name >>
+    steps:
+      - checkout:
+          path: ~/project
       - *restore-cache
       - run:
           command: yarn
@@ -38,14 +78,19 @@ jobs:
   test:
     executor: python
     steps:
-      - checkout
+      - checkout:
+          path: ~/project
       - *restore-cache
       - run: yarn test
 
   deployS3:
     executor: python
+    package_name:
+      type: string
+    working_directory: ~/project/packages/<< parameters.package_name >>
     steps:
-      - checkout
+      - checkout:
+          path: ~/project
       - *restore-cache
       - aws-s3/sync:
           from: ./build
@@ -58,16 +103,46 @@ jobs:
             --exclude ".circleci/*" \
 
 workflows:
-  deploy:
+  version: 2
+
+  # The main workflow responsible for triggering all other workflows
+  # in which changes are detected.
+  ci:
+    when: << pipeline.parameters.trigger >>
     jobs:
-      - build
+      - trigger-workflows
+
+  # Workflows defined for each package.
+
+  app:
+    when: << pipeline.parameters.app >>
+    jobs:
+      - build:
+          name: app-build
+          package_name: app
       - test:
+          name: app-test
+          package_name: app
           requires:
-            - build
+            - app-build
       - deployS3:
+          name: app-deploy
+          package_name: app
           requires:
-            - test
+            - app-test
           context: aws
           filters:
             branches:
               only: main
+
+  api:
+    when: << pipeline.parameters.api >>
+    jobs:
+      - build:
+          name: api-build
+          package_name: api
+      - test:
+          name: api-test
+          package_name: api
+          requires:
+            - api-build
