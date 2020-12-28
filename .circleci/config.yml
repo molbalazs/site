@@ -33,6 +33,7 @@ defaults:
 
 jobs:
   build:
+    working_directory: ~/project/packages/app
     executor: python
     steps:
       - checkout
@@ -48,6 +49,7 @@ jobs:
       - *save-app-build
 
   test:
+    working_directory: ~/project/packages/app
     executor: python
     steps:
       - checkout
@@ -56,6 +58,7 @@ jobs:
       - run: yarn test
 
   deployS3:
+    working_directory: ~/project/packages/app
     executor: python
     steps:
       - checkout
@@ -63,7 +66,7 @@ jobs:
       - *restore-app-build
       - aws-s3/sync:
           from: ./packages/app/build
-          to: 's3://zsalab.com'
+          to: "s3://zsalab.com"
           arguments: |
             --acl public-read \
             --cache-control "max-age=86400" \
@@ -72,6 +75,8 @@ jobs:
             --exclude ".circleci/*" \
 
 workflows:
+  version: 2
+
   deploy:
     jobs:
       - build
