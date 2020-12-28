@@ -1,8 +1,0 @@
-{
-  "root": "packages",
-  "pages": 3,
-  "packages": {
-    "api": ["packages/api/"],
-    "app": ["packages/app/"]
-  }
-}
