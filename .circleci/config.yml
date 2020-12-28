@@ -33,7 +33,7 @@ defaults:
 
 jobs:
   build:
-    working_directory: ~/project/packages/app
+    working_directory: /home/circleci/project/packages/app
     executor: python
     steps:
       - checkout
@@ -49,7 +49,7 @@ jobs:
       - *save-app-build
 
   test:
-    working_directory: ~/project/packages/app
+    working_directory: /home/circleci/project/packages/app
     executor: python
     steps:
       - checkout
@@ -58,7 +58,7 @@ jobs:
       - run: yarn test
 
   deployS3:
-    working_directory: ~/project/packages/app
+    working_directory: /home/circleci/project/packages/app
     executor: python
     steps:
       - checkout
