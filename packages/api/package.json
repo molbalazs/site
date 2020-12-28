@@ -6,6 +6,6 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "build": "react-scripts build"
+    "build": "echo 'API build'"
   }
 }
