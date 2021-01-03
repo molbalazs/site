@@ -81,7 +81,7 @@ commands:
             yarn
             yarn test
 
-  deployS3:
+  deploy-s3:
     steps:
       - checkout:
           path: ~/project
@@ -114,7 +114,7 @@ jobs:
     working_directory: /home/circleci/project/packages/app
     executor: python
     steps:
-      - deployS3
+      - deploy-s3
 
 workflows:
   version: 2
