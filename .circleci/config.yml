@@ -79,29 +79,29 @@ jobs:
     steps:
       - node-build-steps
 
-  # test-app:
-  #   working_directory: /home/circleci/project/packages/app
-  #   executor: python
-  #   steps:
-  #     - checkout
-  #     - *restore-cache
-  #     - run: yarn test
+  test-app:
+    working_directory: /home/circleci/project/packages/app
+    executor: python
+    steps:
+      - checkout
+      - *restore-cache
+      - run: yarn test
 
-  # deployS3-app:
-  #   working_directory: /home/circleci/project/packages/app
-  #   executor: python
-  #   steps:
-  #     - checkout
-  #     - *restore-cache
-  #     - aws-s3/sync:
-  #         from: ./packages/app/build
-  #         to: "s3://zsalab.com"
-  #         arguments: |
-  #           --acl public-read \
-  #           --cache-control "max-age=86400" \
-  #           --exclude ".git/*" \
-  #           --exclude ".gitignore" \
-  #           --exclude ".circleci/*" \
+  deployS3-app:
+    working_directory: /home/circleci/project/packages/app
+    executor: python
+    steps:
+      - checkout
+      - *restore-cache
+      - aws-s3/sync:
+          from: ./packages/app/build
+          to: "s3://zsalab.com"
+          arguments: |
+            --acl public-read \
+            --cache-control "max-age=86400" \
+            --exclude ".git/*" \
+            --exclude ".gitignore" \
+            --exclude ".circleci/*" \
 
 workflows:
   version: 2
@@ -109,13 +109,13 @@ workflows:
   deploy:
     jobs:
       - build-app
-      # - test-app:
-      #     requires:
-      #       - build-app
-      # - deployS3-app:
-      #     requires:
-      #       - test-app
-      #     context: aws
-      #     filters:
-      #       branches:
-      #         only: main
+      - test-app:
+          requires:
+            - build-app
+      - deployS3-app:
+          requires:
+            - test-app
+          context: aws
+          filters:
+            branches:
+              only: main
