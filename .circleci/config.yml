@@ -24,40 +24,13 @@ aliases:
           - node_modules
           - build
         key: build-cache-{{ checksum "yarn.lock" }}
-  
-  - &restore-build-flag
-      restore_cache:
-        keys:
-          - build-flag-{{ checksum "package.json" }}
-
-  - &test-build-flag
-      run:
-        name: Exit if build flag exists
-        command: |
-          FILE=build.flag
-          if test -f "$FILE"; then
-              echo "$FILE exist"
-              circleci step halt
-          fi
 
 commands:
-  save-build-flag:
-    steps:
-      - run:
-          name: Create build flag
-          command: touch build.flag
-      - save_cache:
-          paths:
-            - build.flag
-          key:
-            build-flag-{{ checksum "package.json" }}
 
   node-build-steps:
     steps:
       - checkout:
           path: ~/project
-      - *restore-build-flag
-      - *test-build-flag
       # Services and packages in a Workspace don't get their own
       # yarn.lock so we need to generate them manually.
       - *generate-lock-file
@@ -69,8 +42,7 @@ commands:
             yarn build
             rm -rf src
       - *save-cache
-      - save-build-flag
-  
+
   node-test-steps:
     steps:
       - checkout:
