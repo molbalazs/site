@@ -55,7 +55,8 @@ commands:
 
   node-build-steps:
     steps:
-      - checkout
+      - checkout:
+          path: ~/site
       - *restore-build-flag
       - *test-build-flag
       # Services and packages in a Workspace don't get their own
