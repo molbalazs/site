@@ -16,13 +16,14 @@ aliases:
   - &restore-cache
       restore_cache:
         keys:
-          - dependencies-cache-{{ checksum "yarn.lock" }}
+          - build-cache-{{ checksum "yarn.lock" }}
 
   - &save-cache
       save_cache:
         paths:
           - node_modules
-        key: dependencies-cache-{{ checksum "yarn.lock" }}
+          - build
+        key: build-cache-{{ checksum "yarn.lock" }}
   
   - &restore-build-flag
       restore_cache:
