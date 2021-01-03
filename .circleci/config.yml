@@ -23,6 +23,23 @@ aliases:
         paths:
           - node_modules
         key: dependencies-cache-{{ checksum "yarn.lock" }}
+  
+  - &restore-build-flag
+      restore_cache:
+        keys:
+          - build-flag-{{ checksum "package.json" }}
+
+  - &test-build-flag
+      run:
+        name: Exit if build flag exists
+        command: |
+          FILE=build.flag
+          if test -f "$FILE"; then
+              echo "$FILE exist"
+              circleci step halt
+          fi
+
+
 
 commands:
   save-build-flag:
@@ -45,8 +62,6 @@ commands:
       # yarn.lock so we need to generate them manually.
       - *generate-lock-file
       - *restore-cache
-      - *install_aws_cli
-      - *configure_aws_cli
       - run:
           name: Build
           command: |
