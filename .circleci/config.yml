@@ -81,6 +81,22 @@ commands:
             yarn
             yarn test
 
+  deployS3:
+    steps:
+      - checkout:
+          path: ~/project
+      - *restore-cache
+      - aws-s3/sync:
+          from: ./packages/app/build
+          to: "s3://zsalab.com"
+          arguments: |
+            --acl public-read \
+            --cache-control "max-age=86400" \
+            --exclude ".git/*" \
+            --exclude ".gitignore" \
+            --exclude ".circleci/*" \
+
+
 jobs:
   build-app:
     working_directory: /home/circleci/project/packages/app
@@ -98,17 +114,7 @@ jobs:
     working_directory: /home/circleci/project/packages/app
     executor: python
     steps:
-      - checkout
-      - *restore-cache
-      - aws-s3/sync:
-          from: ./packages/app/build
-          to: "s3://zsalab.com"
-          arguments: |
-            --acl public-read \
-            --cache-control "max-age=86400" \
-            --exclude ".git/*" \
-            --exclude ".gitignore" \
-            --exclude ".circleci/*" \
+      - deployS3
 
 workflows:
   version: 2
