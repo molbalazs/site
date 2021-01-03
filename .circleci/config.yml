@@ -39,8 +39,6 @@ aliases:
               circleci step halt
           fi
 
-
-
 commands:
   save-build-flag:
     steps:
@@ -71,6 +69,17 @@ commands:
             rm -rf src
       - *save-cache
       - save-build-flag
+  
+  node-test-steps:
+    steps:
+      - checkout:
+          path: ~/project
+      - *restore-cache
+      - run:
+          name: Test
+          command: |
+            yarn
+            yarn test
 
 jobs:
   build-app:
@@ -83,9 +92,7 @@ jobs:
     working_directory: /home/circleci/project/packages/app
     executor: python
     steps:
-      - checkout
-      - *restore-cache
-      - run: yarn test
+      - node-test-steps
 
   deployS3-app:
     working_directory: /home/circleci/project/packages/app
