@@ -7,72 +7,99 @@ executors:
     docker:
       - image: circleci/python:2-node
 
-defaults:
+aliases:
+  - &generate-lock-file
+      run:
+        name: Generate lock file
+        command: yarn generate-lock-entry >> yarn.lock
+
   - &restore-cache
-    restore_cache:
-      name: Restore Yarn Package Cache
-      keys:
-        - cache-2-{{ checksum "yarn.lock" }}
+      restore_cache:
+        keys:
+          - dependencies-cache-{{ checksum "yarn.lock" }}
+
   - &save-cache
-    save_cache:
-      name: Save Yarn Package Cache
-      key: cache-2-{{ checksum "yarn.lock" }}
-      paths:
-        - /node_modules
-        - /build
+      save_cache:
+        paths:
+          - node_modules
+        key: dependencies-cache-{{ checksum "yarn.lock" }}
+
+commands:
+  save-build-flag:
+    steps:
+      - run:
+          name: Create build flag
+          command: touch build.flag
+      - save_cache:
+          paths:
+            - build.flag
+          key:
+            build-flag-{{ checksum "package.json" }}
+
+  node-build-steps:
+    steps:
+      - checkout
+      - *restore-build-flag
+      - *test-build-flag
+      # Services and packages in a Workspace don't get their own
+      # yarn.lock so we need to generate them manually.
+      - *generate-lock-file
+      - *restore-cache
+      - *install_aws_cli
+      - *configure_aws_cli
+      - run:
+          name: Build
+          command: |
+            yarn
+            yarn build
+            rm -rf src
+      - *save-cache
+      - save-build-flag
 
 jobs:
-  build:
+  build-app:
     working_directory: /home/circleci/project/packages/app
     executor: python
     steps:
-      - checkout
-      - *restore-cache
-      - run:
-          command: yarn
-          name: Install dependencies
-      - run:
-          command: yarn build
-          name: Compile
-      - *save-cache
+      - node-build-steps
 
-  test:
-    working_directory: /home/circleci/project/packages/app
-    executor: python
-    steps:
-      - checkout
-      - *restore-cache
-      - run: yarn test
+  # test-app:
+  #   working_directory: /home/circleci/project/packages/app
+  #   executor: python
+  #   steps:
+  #     - checkout
+  #     - *restore-cache
+  #     - run: yarn test
 
-  deployS3:
-    working_directory: /home/circleci/project/packages/app
-    executor: python
-    steps:
-      - checkout
-      - *restore-cache
-      - aws-s3/sync:
-          from: ./packages/app/build
-          to: "s3://zsalab.com"
-          arguments: |
-            --acl public-read \
-            --cache-control "max-age=86400" \
-            --exclude ".git/*" \
-            --exclude ".gitignore" \
-            --exclude ".circleci/*" \
+  # deployS3-app:
+  #   working_directory: /home/circleci/project/packages/app
+  #   executor: python
+  #   steps:
+  #     - checkout
+  #     - *restore-cache
+  #     - aws-s3/sync:
+  #         from: ./packages/app/build
+  #         to: "s3://zsalab.com"
+  #         arguments: |
+  #           --acl public-read \
+  #           --cache-control "max-age=86400" \
+  #           --exclude ".git/*" \
+  #           --exclude ".gitignore" \
+  #           --exclude ".circleci/*" \
 
 workflows:
   version: 2
 
   deploy:
     jobs:
-      - build
-      - test:
-          requires:
-            - build
-      - deployS3:
-          requires:
-            - test
-          context: aws
-          filters:
-            branches:
-              only: main
+      - build-app
+      # - test-app:
+      #     requires:
+      #       - build-app
+      # - deployS3-app:
+      #     requires:
+      #       - test-app
+      #     context: aws
+      #     filters:
+      #       branches:
+      #         only: main
