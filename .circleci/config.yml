@@ -62,7 +62,7 @@ commands:
       - *generate-lock-file
       - *restore-cache
       - aws-s3/sync:
-          from: ./packages/app/build
+          from: ~/project/packages/app/build
           to: "s3://zsalab.com"
           arguments: |
             --acl public-read \
